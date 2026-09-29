@@ -59,12 +59,12 @@ router.get('/:id', async (req, res) => {
   res.json({ user });
 });
 
-router.get('/:id/posts', async (req, res) => {
+  router.get('/:id/posts', async (req, res) => {
   const posts = await prisma.post.findMany({
     where: { userId: parseInt(req.params.id) },
     include: {
       user: { select: { id: true, name: true, username: true, avatar: true } },
-      likes: { select: { userId: true } },
+      likes: { select: { userId: true, type: true } },
       comments: {
         include: { user: { select: { id: true, name: true, username: true, avatar: true } } },
         orderBy: { createdAt: 'desc' },

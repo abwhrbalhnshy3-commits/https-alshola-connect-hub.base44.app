@@ -34,11 +34,12 @@ export default function Feed() {
     toast('تم نشر المنشور بنجاح');
   };
 
-  const handleLike = (postId, liked, userId) => {
+  const handleReaction = (postId, reaction, userId) => {
     setPosts((prev) =>
       prev.map((p) => {
         if (p.id !== postId) return p;
-        const likes = liked ? [...p.likes, { userId }] : p.likes.filter((l) => l.userId !== userId);
+        const likes = p.likes.filter((item) => item.userId !== userId);
+        if (reaction) likes.push({ userId, type: reaction });
         return { ...p, likes };
       })
     );
@@ -48,6 +49,12 @@ export default function Feed() {
     setPosts((prev) =>
       prev.map((p) => (p.id === postId ? { ...p, comments: [comment, ...p.comments] } : p))
     );
+  };
+
+  const handleCommentDelete = (postId, commentId) => {
+    setPosts((prev) => prev.map((p) => (
+      p.id === postId ? { ...p, comments: p.comments.filter((comment) => comment.id !== commentId) } : p
+    )));
   };
 
   const handleDelete = (postId) => {
@@ -105,8 +112,9 @@ export default function Feed() {
           <PostCard
             key={post.id}
             post={post}
-            onLike={handleLike}
+            onReaction={handleReaction}
             onComment={handleComment}
+            onCommentDelete={handleCommentDelete}
             onDelete={handleDelete}
           />
         ))}
