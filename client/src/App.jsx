@@ -1,10 +1,14 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 import Navbar from './components/Navbar';
+import BottomNav from './components/BottomNav';
 import Feed from './pages/Feed';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
+import Search from './pages/Search';
+import EditProfile from './pages/EditProfile';
 
 function LoadingScreen() {
   return (
@@ -21,7 +25,7 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
-function AppRoutes() {
+function AppShell() {
   const { user, loading } = useAuth();
 
   if (loading) return <LoadingScreen />;
@@ -29,13 +33,18 @@ function AppRoutes() {
   return (
     <>
       {user && <Navbar />}
-      <Routes>
-        <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
-        <Route path="/register" element={user ? <Navigate to="/" replace /> : <Register />} />
-        <Route path="/" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
-        <Route path="/profile/:id" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <main className={user ? 'pb-20 min-h-screen' : 'min-h-screen'}>
+        <Routes>
+          <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
+          <Route path="/register" element={user ? <Navigate to="/" replace /> : <Register />} />
+          <Route path="/" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
+          <Route path="/search" element={<ProtectedRoute><Search /></ProtectedRoute>} />
+          <Route path="/edit-profile" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
+          <Route path="/profile/:id" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
+      {user && <BottomNav />}
     </>
   );
 }
@@ -43,9 +52,11 @@ function AppRoutes() {
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
+      <ToastProvider>
+        <BrowserRouter>
+          <AppShell />
+        </BrowserRouter>
+      </ToastProvider>
     </AuthProvider>
   );
 }

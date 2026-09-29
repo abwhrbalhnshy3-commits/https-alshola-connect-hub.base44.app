@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import api from '../api';
 import Avatar from './Avatar';
 
 export default function CreatePost({ onPostCreated }) {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -17,6 +19,7 @@ export default function CreatePost({ onPostCreated }) {
       const res = await api.post('/posts', { content });
       onPostCreated(res.data.post);
       setContent('');
+      toast('تم نشر المنشور بنجاح');
     } catch (err) {
       alert(err.response?.data?.error || 'حدث خطأ أثناء النشر');
     } finally {

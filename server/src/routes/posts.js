@@ -23,6 +23,22 @@ router.get('/', async (req, res) => {
   res.json({ posts });
 });
 
+router.get('/following', auth, async (req, res) => {
+  const following = await prisma.follow.findMany({
+    where: { followerId: req.userId },
+    select: { followingId: true },
+  });
+  const followingIds = [...following.map((f) => f.followingId), req.userId];
+
+  const posts = await prisma.post.findMany({
+    where: { userId: { in: followingIds } },
+    include: postInclude,
+    orderBy: { createdAt: 'desc' },
+    take: 50,
+  });
+  res.json({ posts });
+});
+
 router.post('/', auth, async (req, res) => {
   const { content } = req.body;
   if (!content || !content.trim()) {
@@ -63,6 +79,15 @@ router.post('/:id/comments', auth, async (req, res) => {
     include: { user: { select: { id: true, name: true, username: true, avatar: true } } },
   });
   res.json({ comment });
+});
+
+router.delete('/:id', auth, async (req, res) => {
+  const postId = parseInt(req.params.id);
+  const post = await prisma.post.findUnique({ where: { id: postId } });
+  if (!post) return res.status(404).json({ error: 'المنشور غير موجود' });
+  if (post.userId !== req.userId) return res.status(403).json({ error: 'لا يمكنك حذف منشور شخص آخر' });
+  await prisma.post.delete({ where: { id: postId } });
+  res.json({ success: true });
 });
 
 module.exports = router;

@@ -5,33 +5,40 @@ import api from '../api';
 import Avatar from '../components/Avatar';
 import CreatePost from '../components/CreatePost';
 import PostCard from '../components/PostCard';
+import { PostSkeleton } from '../components/Skeleton';
+import { useToast } from '../context/ToastContext';
 
 export default function Feed() {
   const [posts, setPosts] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState('all');
+  const { toast } = useToast();
 
   useEffect(() => {
-    Promise.all([api.get('/posts'), api.get('/users/suggestions/all')])
+    setLoading(true);
+    Promise.all([
+      api.get(tab === 'following' ? '/posts/following' : '/posts'),
+      api.get('/users/suggestions/all'),
+    ])
       .then(([postsRes, sugRes]) => {
         setPosts(postsRes.data.posts);
         setSuggestions(sugRes.data.users);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, []);
+  }, [tab]);
 
   const handlePostCreated = (newPost) => {
     setPosts((prev) => [newPost, ...prev]);
+    toast('تم نشر المنشور بنجاح');
   };
 
   const handleLike = (postId, liked, userId) => {
     setPosts((prev) =>
       prev.map((p) => {
         if (p.id !== postId) return p;
-        const likes = liked
-          ? [...p.likes, { userId }]
-          : p.likes.filter((l) => l.userId !== userId);
+        const likes = liked ? [...p.likes, { userId }] : p.likes.filter((l) => l.userId !== userId);
         return { ...p, likes };
       })
     );
@@ -43,21 +50,45 @@ export default function Feed() {
     );
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center pt-20">
-        <div className="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  const handleDelete = (postId) => {
+    setPosts((prev) => prev.filter((p) => p.id !== postId));
+  };
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
-      {/* Create Post */}
       <CreatePost onPostCreated={handlePostCreated} />
 
+      {/* Tabs */}
+      <div className="flex gap-1 bg-white rounded-2xl shadow-sm border border-slate-200 p-1">
+        <button
+          onClick={() => setTab('all')}
+          className={`flex-1 py-2 rounded-xl text-sm font-medium transition-colors ${
+            tab === 'all' ? 'bg-brand-600 text-white' : 'text-slate-500 hover:bg-slate-50'
+          }`}
+        >
+          الكل
+        </button>
+        <button
+          onClick={() => setTab('following')}
+          className={`flex-1 py-2 rounded-xl text-sm font-medium transition-colors ${
+            tab === 'following' ? 'bg-brand-600 text-white' : 'text-slate-500 hover:bg-slate-50'
+          }`}
+        >
+          المتابعون
+        </button>
+      </div>
+
+      {/* Loading skeletons */}
+      {loading && (
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <PostSkeleton key={i} />
+          ))}
+        </div>
+      )}
+
       {/* Suggestions */}
-      {suggestions.length > 0 && (
+      {!loading && suggestions.length > 0 && tab === 'all' && (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
           <h3 className="font-semibold text-slate-800 mb-3">أشخاص قد تعرفهم</h3>
           <div className="space-y-2">
@@ -69,13 +100,22 @@ export default function Feed() {
       )}
 
       {/* Posts */}
-      {posts.map((post) => (
-        <PostCard key={post.id} post={post} onLike={handleLike} onComment={handleComment} />
-      ))}
+      {!loading &&
+        posts.map((post) => (
+          <PostCard
+            key={post.id}
+            post={post}
+            onLike={handleLike}
+            onComment={handleComment}
+            onDelete={handleDelete}
+          />
+        ))}
 
-      {posts.length === 0 && (
-        <div className="text-center py-12 text-slate-400">
-          لا توجد منشورات بعد. كن أول من ينشر!
+      {!loading && posts.length === 0 && (
+        <div className="text-center py-16 text-slate-400">
+          {tab === 'following'
+            ? 'لا توجد منشورات من الأشخاص الذين تتابعهم. تابع المزيد من الأشخاص!'
+            : 'لا توجد منشورات بعد. كن أول من ينشر!'}
         </div>
       )}
     </div>
@@ -84,11 +124,13 @@ export default function Feed() {
 
 function SuggestionItem({ user }) {
   const [following, setFollowing] = useState(false);
+  const { toast } = useToast();
 
   const handleFollow = async () => {
     try {
       const res = await api.post(`/users/${user.id}/follow`);
       setFollowing(res.data.following);
+      toast(res.data.following ? `تتابع الآن ${user.name}` : `ألغيت متابعة ${user.name}`);
     } catch (err) {
       console.error(err);
     }
@@ -108,9 +150,7 @@ function SuggestionItem({ user }) {
       <button
         onClick={handleFollow}
         className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-          following
-            ? 'bg-slate-100 text-slate-600'
-            : 'bg-brand-600 text-white hover:bg-brand-700'
+          following ? 'bg-slate-100 text-slate-600' : 'bg-brand-600 text-white hover:bg-brand-700'
         }`}
       >
         {following ? <Check className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}

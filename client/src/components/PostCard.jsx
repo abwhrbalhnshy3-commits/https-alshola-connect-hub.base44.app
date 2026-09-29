@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, MessageCircle, Send } from 'lucide-react';
+import { Heart, MessageCircle, Send, Trash2 } from 'lucide-react';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import Avatar from './Avatar';
 import { timeAgo } from '../utils';
 
-export default function PostCard({ post, onLike, onComment }) {
+export default function PostCard({ post, onLike, onComment, onDelete }) {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [commenting, setCommenting] = useState(false);
@@ -38,6 +40,17 @@ export default function PostCard({ post, onLike, onComment }) {
     }
   };
 
+  const handleDelete = async () => {
+    if (!confirm('هل أنت متأكد من حذف هذا المنشور؟')) return;
+    try {
+      await api.delete(`/posts/${post.id}`);
+      onDelete(post.id);
+      toast('تم حذف المنشور', 'info');
+    } catch (err) {
+      toast(err.response?.data?.error || 'حدث خطأ', 'error');
+    }
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
       {/* Header */}
@@ -51,6 +64,15 @@ export default function PostCard({ post, onLike, onComment }) {
           </Link>
           <div className="text-xs text-slate-400">{timeAgo(post.createdAt)}</div>
         </div>
+        {post.user.id === user?.id && (
+          <button
+            onClick={handleDelete}
+            className="p-2 rounded-full hover:bg-rose-50 transition-colors text-slate-400 hover:text-rose-500"
+            title="حذف المنشور"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* Content */}

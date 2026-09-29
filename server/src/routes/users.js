@@ -31,6 +31,22 @@ router.get('/suggestions/all', auth, async (req, res) => {
   res.json({ users });
 });
 
+router.get('/search/all', auth, async (req, res) => {
+  const q = (req.query.q || '').trim();
+  if (!q) return res.json({ users: [] });
+  const users = await prisma.user.findMany({
+    where: {
+      OR: [
+        { name: { contains: q, mode: 'insensitive' } },
+        { username: { contains: q, mode: 'insensitive' } },
+      ],
+    },
+    select: { id: true, name: true, username: true, avatar: true, bio: true },
+    take: 20,
+  });
+  res.json({ users });
+});
+
 router.get('/:id', async (req, res) => {
   const user = await prisma.user.findUnique({
     where: { id: parseInt(req.params.id) },
@@ -83,6 +99,22 @@ router.get('/:id/isFollowing', auth, async (req, res) => {
     where: { followerId_followingId: { followerId: req.userId, followingId: parseInt(req.params.id) } },
   });
   res.json({ following: !!existing });
+});
+
+router.get('/:id/followers', async (req, res) => {
+  const follows = await prisma.follow.findMany({
+    where: { followingId: parseInt(req.params.id) },
+    include: { follower: { select: { id: true, name: true, username: true, avatar: true, bio: true } } },
+  });
+  res.json({ users: follows.map((f) => f.follower) });
+});
+
+router.get('/:id/following', async (req, res) => {
+  const follows = await prisma.follow.findMany({
+    where: { followerId: parseInt(req.params.id) },
+    include: { following: { select: { id: true, name: true, username: true, avatar: true, bio: true } } },
+  });
+  res.json({ users: follows.map((f) => f.following) });
 });
 
 module.exports = router;
