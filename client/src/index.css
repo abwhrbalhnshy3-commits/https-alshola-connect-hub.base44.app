@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Cairo', sans-serif;
+  background-color: #f1f5f9;
+  -webkit-font-smoothing: antialiased;
+}
