@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Search, User } from 'lucide-react';
+import { Home, Search, User, MessageCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function BottomNav() {
@@ -9,6 +9,7 @@ export default function BottomNav() {
   const items = [
     { to: '/', icon: Home, label: 'الرئيسية', active: location.pathname === '/' },
     { to: '/search', icon: Search, label: 'بحث', active: location.pathname === '/search' },
+    { to: '/messages', icon: MessageCircle, label: 'رسائل', active: location.pathname.startsWith('/messages') },
     { to: `/profile/${user?.id}`, icon: User, label: 'حسابي', active: location.pathname.startsWith('/profile') },
   ];
 

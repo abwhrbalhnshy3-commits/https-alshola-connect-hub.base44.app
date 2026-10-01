@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { UserPlus, Check, Calendar, Pencil, X, Users } from 'lucide-react';
+import { UserPlus, Check, Calendar, Pencil, X, Users, MessageCircle } from 'lucide-react';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -122,15 +122,24 @@ export default function Profile() {
                 تعديل الملف
               </button>
             ) : (
-              <button
-                onClick={handleFollow}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-colors mt-12 ${
-                  following ? 'bg-slate-100 text-slate-600' : 'bg-brand-600 text-white hover:bg-brand-700'
-                }`}
-              >
-                {following ? <Check className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
-                {following ? 'متابَع' : 'متابعة'}
-              </button>
+              <div className="flex items-center gap-2 mt-12">
+                <button
+                  onClick={handleFollow}
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    following ? 'bg-slate-100 text-slate-600' : 'bg-brand-600 text-white hover:bg-brand-700'
+                  }`}
+                >
+                  {following ? <Check className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
+                  {following ? 'متابَع' : 'متابعة'}
+                </button>
+                <Link
+                  to={`/messages/${profile.id}`}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  رسالة
+                </Link>
+              </div>
             )}
           </div>
 

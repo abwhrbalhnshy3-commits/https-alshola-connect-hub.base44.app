@@ -6,10 +6,16 @@ const prisma = new PrismaClient();
 async function main() {
   const postCount = await prisma.post.count();
   if (postCount > 0) {
-    console.log('Data already seeded, skipping.');
-    return;
+    console.log('Posts already seeded, skipping post seed.');
+  } else {
+    await seedPosts();
   }
 
+  await seedMessages();
+  console.log('Seed completed successfully.');
+}
+
+async function seedPosts() {
   const password = await bcrypt.hash('password123', 10);
 
   const [sara, omar, layla] = await Promise.all([
@@ -24,7 +30,7 @@ async function main() {
     }),
   ]);
 
-  const posts = await prisma.post.createMany({
+  await prisma.post.createMany({
     data: [
       { content: 'يوم جميل في الطبيعة 🌿 شاركتكم بعض الصور من رحلتي اليوم', userId: sara.id },
       { content: 'بدأت مشروع جديد باستخدام React و Node.js، متحمس جداً للنتيجة! 🚀', userId: omar.id },
@@ -35,7 +41,6 @@ async function main() {
     ],
   });
 
-  // Add some likes and comments
   const allPosts = await prisma.post.findMany();
   if (allPosts.length >= 2) {
     await prisma.like.createMany({
@@ -53,8 +58,34 @@ async function main() {
       ],
     });
   }
+}
 
-  console.log('Seed completed successfully.');
+async function seedMessages() {
+  const existingMsgs = await prisma.message.count();
+  if (existingMsgs > 0) {
+    console.log('Messages already seeded, skipping.');
+    return;
+  }
+
+  const [sara, omar, layla] = await Promise.all([
+    prisma.user.findUnique({ where: { username: 'sara' }, select: { id: true } }),
+    prisma.user.findUnique({ where: { username: 'omar' }, select: { id: true } }),
+    prisma.user.findUnique({ where: { username: 'layla' }, select: { id: true } }),
+  ]);
+
+  if (!sara || !omar || !layla) return;
+
+  await prisma.message.createMany({
+    data: [
+      { content: 'مرحباً عمر! كيف حالك؟', senderId: sara.id, receiverId: omar.id },
+      { content: 'أهلاً سارة! أنا بخير الحمد لله، وأنتِ؟', senderId: omar.id, receiverId: sara.id },
+      { content: 'بخير، سمعت عن مشروعك الجديد، مبارك! 🎉', senderId: sara.id, receiverId: omar.id },
+      { content: 'شكراً جزيلاً! 🙏 سأشارككم التفاصيل قريباً', senderId: omar.id, receiverId: sara.id },
+      { content: 'مرحباً ليلى، أحببت لوحتك الجديدة كثيراً', senderId: sara.id, receiverId: layla.id },
+      { content: 'شكراً سارة! هذا يعني لي الكثير ❤️', senderId: layla.id, receiverId: sara.id },
+    ],
+  });
+  console.log('Sample messages seeded.');
 }
 
 main()

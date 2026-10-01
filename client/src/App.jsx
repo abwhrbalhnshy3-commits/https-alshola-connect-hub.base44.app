@@ -9,6 +9,8 @@ import Register from './pages/Register';
 import Profile from './pages/Profile';
 import Search from './pages/Search';
 import EditProfile from './pages/EditProfile';
+import Messages from './pages/Messages';
+import Chat from './pages/Chat';
 
 function LoadingScreen() {
   return (
@@ -41,6 +43,8 @@ function AppShell() {
           <Route path="/search" element={<ProtectedRoute><Search /></ProtectedRoute>} />
           <Route path="/edit-profile" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
           <Route path="/profile/:id" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+          <Route path="/messages/:id" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
