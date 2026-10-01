@@ -73,10 +73,6 @@ export default function Login() {
           </button>
         </form>
 
-        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mt-4 text-sm text-amber-700 text-center">
-          حساب تجريبي: demo@alshola.app / password123
-        </div>
-
         <p className="text-center text-slate-500 text-sm mt-6">
           ليس لديك حساب؟{' '}
           <Link to="/register" className="text-brand-600 font-semibold hover:underline">
